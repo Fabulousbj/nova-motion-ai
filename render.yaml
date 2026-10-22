@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nova-motion-kling-studio
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: KLING_API_KEY
+        sync: false
+      - key: KLING_API_BASE
+        value: https://api-singapore.klingai.com

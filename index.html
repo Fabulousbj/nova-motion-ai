@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nova Motion — AI Video Studio</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon">✦</span><span>NOVA<span class="muted">MOTION</span></span></div>
+      <div class="nav-label">WORKSPACE</div>
+      <a class="nav active" href="/">▣ <span>Video Studio</span></a>
+      <a class="nav" href="#history">◷ <span>Generation history</span></a>
+      <div class="side-note">
+        <div class="tiny-orb">✧</div>
+        <h3>Your ideas, in motion.</h3>
+        <p>Create video from a prompt or bring a still image to life.</p>
+      </div>
+      <div class="sidebar-bottom"><span class="status-dot"></span> Studio interface ready</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><div class="eyebrow">CREATIVE WORKSPACE</div><h1>AI Video Studio</h1></div>
+        <div class="top-right"><span class="api-pill" id="apiStatus">Checking API…</span><div class="avatar">N</div></div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">IMAGINATION, MEET MOTION</div>
+          <h2>Make something<br><span>unforgettable.</span></h2>
+          <p>Turn a clear idea into a cinematic clip with Kling AI. Start with words, or upload an image to animate.</p>
+          <div class="hero-tags"><span>✦ Text to video</span><span>▧ Image to video</span><span>◈ Cinematic output</span></div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="planet"></div><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="spark s1">✦</div><div class="spark s2">✧</div><div class="art-caption">IDEAS IN MOTION <span>✦</span></div></div>
+      </section>
+
+      <section class="workspace">
+        <div class="section-heading"><div><div class="eyebrow">CREATE A CLIP</div><h2>Build your scene</h2></div><span class="step">01 <i>/</i> 02</span></div>
+        <div class="mode-switch">
+          <button class="mode-btn selected" data-mode="text">✧ <span>Text to video</span><small>Generate from a prompt</small></button>
+          <button class="mode-btn" data-mode="image">▧ <span>Image to video</span><small>Animate an image</small></button>
+        </div>
+
+        <form id="generateForm">
+          <input type="hidden" id="mode" name="mode" value="text">
+          <label for="prompt">YOUR PROMPT <span>Be descriptive for better results</span></label>
+          <textarea id="prompt" name="prompt" maxlength="2500" placeholder="A lone astronaut walks across a glowing desert at blue hour, flowing fabric, slow cinematic camera push-in, volumetric light, highly detailed..." required></textarea>
+          <div class="prompt-foot"><span>✦ Tip: describe subject, action, camera movement and mood.</span><span id="charCount">0 / 2500</span></div>
+
+          <div id="imageArea" class="image-area hidden">
+            <label for="image">UPLOAD A STARTING IMAGE <span>JPG or PNG · up to 10 MB</span></label>
+            <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+            <div id="fileName" class="file-name">No image selected</div>
+          </div>
+
+          <div class="settings">
+            <div><label for="duration">DURATION</label><select id="duration" name="duration"><option>5</option><option>3</option><option>4</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option></select></div>
+            <div><label for="resolution">RESOLUTION</label><select id="resolution" name="resolution"><option value="720p">720p</option><option value="1080p">1080p</option><option value="4k">4K</option></select></div>
+            <div id="ratioSetting"><label for="aspect_ratio">ASPECT RATIO</label><select id="aspect_ratio" name="aspect_ratio"><option>16:9</option><option>9:16</option><option>1:1</option></select></div>
+          </div>
+          <div class="notice">ⓘ Video generation uses your connected Kling API account and may incur usage charges.</div>
+          <button class="generate" id="generateBtn" type="submit"><span>✦</span> Generate video <b>↗</b></button>
+        </form>
+      </section>
+
+      <section class="result-section" id="resultSection">
+        <div class="section-heading"><div><div class="eyebrow">YOUR OUTPUT</div><h2>Generation result</h2></div><span class="step">02 <i>/</i> 02</span></div>
+        <div class="result-card" id="resultCard"><div class="result-symbol">✧</div><h3>Your next scene starts here</h3><p>Submit a prompt to create your first video. Results will appear in this space.</p></div>
+      </section>
+      <footer><span>✦ NOVA MOTION</span><span>Powered by your authorized Kling AI API connection</span></footer>
+    </main>
+  </div>
+  <script>
+    const modeInput = document.getElementById('mode');
+    const imageArea = document.getElementById('imageArea');
+    const ratioSetting = document.getElementById('ratioSetting');
+    const imageInput = document.getElementById('image');
+    const promptInput = document.getElementById('prompt');
+    const resultCard = document.getElementById('resultCard');
+    const generateBtn = document.getElementById('generateBtn');
+
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      modeInput.value = btn.dataset.mode;
+      imageArea.classList.toggle('hidden', modeInput.value !== 'image');
+      ratioSetting.classList.toggle('hidden', modeInput.value === 'image');
+    }));
+    promptInput.addEventListener('input', () => document.getElementById('charCount').textContent = `${promptInput.value.length} / 2500`);
+    imageInput.addEventListener('change', () => document.getElementById('fileName').textContent = imageInput.files[0]?.name || 'No image selected');
+
+    fetch('/api/config').then(r => r.json()).then(d => {
+      const el = document.getElementById('apiStatus');
+      el.textContent = d.configured ? '● Kling API connected' : '● API key needed';
+      el.classList.toggle('connected', d.configured);
+    }).catch(() => document.getElementById('apiStatus').textContent = 'API status unavailable');
+
+    function showError(message) {
+      resultCard.innerHTML = `<div class="result-symbol">!</div><h3>Unable to start generation</h3><p>${escapeHtml(message)}</p>`;
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    document.getElementById('generateForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (modeInput.value === 'image' && !imageInput.files.length) {
+        showError('Please upload a starting image first.'); return;
+      }
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<span class="spinner"></span> Submitting to Kling AI…';
+      resultCard.innerHTML = '<div class="loading-orbit"><span></span></div><h3>Preparing your generation</h3><p>Submitting the request securely. This can take a moment.</p>';
+      try {
+        const response = await fetch('/api/generate', {method:'POST', body:new FormData(e.target)});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Request failed');
+        resultCard.innerHTML = `<div class="result-symbol">◷</div><h3>Generation submitted</h3><p>Task ID: <code>${escapeHtml(data.task_id)}</code></p><p id="taskStatus">Checking status…</p><div id="videoOutput"></div>`;
+        pollTask(data.task_id);
+      } catch (err) { showError(err.message); }
+      finally { generateBtn.disabled = false; generateBtn.innerHTML = '<span>✦</span> Generate video <b>↗</b>'; }
+    });
+    async function pollTask(taskId) {
+      const statusEl = document.getElementById('taskStatus');
+      const outputEl = document.getElementById('videoOutput');
+      for (let i=0; i<60; i++) {
+        await new Promise(r => setTimeout(r, 10000));
+        try {
+          const res = await fetch('/api/task/' + encodeURIComponent(taskId));
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Status check failed');
+          if (statusEl) statusEl.textContent = 'Status: ' + (data.status || 'processing') + (data.message ? ' — ' + data.message : '');
+          if (data.video_url && outputEl) {
+            outputEl.innerHTML = `<video controls playsinline src="${escapeHtml(data.video_url)}"></video><p><a class="download-link" href="${escapeHtml(data.video_url)}" target="_blank" rel="noopener">Open / save video ↗</a></p>`;
+            return;
+          }
+          if (['failed','fail'].includes((data.status||'').toLowerCase())) return;
+        } catch (err) { if (statusEl) statusEl.textContent = err.message; return; }
+      }
+      if (statusEl) statusEl.textContent = 'Still processing or timed out. Refresh later and check the task in your Kling API console.';
+    }
+  </script>
+</body>
+</html>
